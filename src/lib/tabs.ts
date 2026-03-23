@@ -236,7 +236,8 @@ export function tabToSearchResult(
  */
 export function getFaviconUrl(url: string): string {
   try {
-    const urlObj = new URL(url);
+    // Validate that the URL is parseable before using it
+    new URL(url);
     // Use Chrome's built-in favicon service
     return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=16`;
   } catch {

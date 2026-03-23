@@ -26,7 +26,17 @@ import {
   syncWithTabs as syncWorkspacesWithTabs,
 } from '../lib/workspaces';
 import { switchToTab, createTab } from '../lib/tabs';
-import type { SearchResult } from '../lib/types';
+import {
+  validateHarpoonMarkPayload,
+  validateHarpoonSlotPayload,
+  validateSearchResultPayload,
+  validateWorkspaceSwitchPayload,
+  validateWorkspaceCreatePayload,
+  validateWorkspaceDeletePayload,
+} from '../lib/validators';
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('Background');
 
 // =============================================================================
 // INITIALIZATION
@@ -36,7 +46,7 @@ import type { SearchResult } from '../lib/types';
  * Initialize the extension when installed or updated
  */
 chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log('HyperTabs: Extension installed/updated', details.reason);
+  log.info('Extension installed/updated', details.reason);
   
   // Create context menus
   await createContextMenus();
@@ -50,7 +60,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
  * Initialize on browser startup
  */
 chrome.runtime.onStartup.addListener(async () => {
-  console.log('HyperTabs: Browser started');
+  log.info('Browser started');
   
   // Sync state with current tabs
   await syncHarpoonWithTabs();
@@ -176,18 +186,17 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
  * Handle keyboard commands defined in manifest.json
  */
 chrome.commands.onCommand.addListener(async (command) => {
-  console.log('HyperTabs: Command received:', command);
+  log.debug('Command received:', command);
   
   switch (command) {
-    case 'harpoon-mark':
-      // Mark current tab to next available slot
-      // For now, we'll show a simple prompt by opening popup
-      // In the future, this could show an overlay to select slot
-      const slot = await markToSlot(1); // Default to slot 1
-      if (slot) {
+    case 'harpoon-mark': {
+      // Mark current tab to the next available harpoon slot
+      const slotNum = await markToNextAvailable();
+      if (slotNum !== null) {
         await updateContextMenus();
       }
       break;
+    }
       
     case 'harpoon-1':
       await jumpToSlot(1);
@@ -227,7 +236,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
     .then(sendResponse)
     .catch((error) => {
-      console.error('HyperTabs: Message handling error:', error);
+      log.error('Message handling error:', error);
       sendResponse({ error: error.message });
     });
   
@@ -240,9 +249,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 async function handleMessage(
   message: { type: string; payload?: unknown },
-  sender: chrome.runtime.MessageSender
+  _sender: chrome.runtime.MessageSender
 ): Promise<unknown> {
-  console.log('HyperTabs: Received message:', message.type);
+  log.debug('Received message:', message.type);
   
   switch (message.type) {
     // =========================================================================
@@ -253,19 +262,19 @@ async function handleMessage(
       return await getHarpoonState();
     
     case 'HARPOON_MARK': {
-      const { slotId, tabId } = message.payload as { slotId: number; tabId?: number };
+      const { slotId, tabId } = validateHarpoonMarkPayload(message.payload);
       const slot = await markToSlot(slotId, tabId);
       await updateContextMenus();
       return slot;
     }
     
     case 'HARPOON_JUMP': {
-      const { slotId } = message.payload as { slotId: number };
+      const { slotId } = validateHarpoonSlotPayload(message.payload, 'HARPOON_JUMP');
       return await jumpToSlot(slotId);
     }
     
     case 'HARPOON_REMOVE': {
-      const { slotId } = message.payload as { slotId: number };
+      const { slotId } = validateHarpoonSlotPayload(message.payload, 'HARPOON_REMOVE');
       await removeFromSlot(slotId);
       await updateContextMenus();
       return true;
@@ -276,7 +285,7 @@ async function handleMessage(
     // =========================================================================
     
     case 'SELECT_RESULT': {
-      const result = message.payload as SearchResult;
+      const result = validateSearchResultPayload(message.payload);
       
       switch (result.type) {
         case 'tab':
@@ -299,18 +308,18 @@ async function handleMessage(
     // =========================================================================
     
     case 'WORKSPACE_SWITCH': {
-      const { workspaceId } = message.payload as { workspaceId: string | null };
+      const { workspaceId } = validateWorkspaceSwitchPayload(message.payload);
       await switchWorkspace(workspaceId);
       return true;
     }
     
     case 'WORKSPACE_CREATE': {
-      const { name } = message.payload as { name: string };
+      const { name } = validateWorkspaceCreatePayload(message.payload);
       return await createWorkspace(name);
     }
     
     case 'WORKSPACE_DELETE': {
-      const { workspaceId } = message.payload as { workspaceId: string };
+      const { workspaceId } = validateWorkspaceDeletePayload(message.payload);
       await deleteWorkspace(workspaceId);
       return true;
     }
@@ -320,7 +329,7 @@ async function handleMessage(
     // =========================================================================
     
     default:
-      console.warn('HyperTabs: Unknown message type:', message.type);
+      log.warn('Unknown message type:', message.type);
       return null;
   }
 }
@@ -332,7 +341,7 @@ async function handleMessage(
 /**
  * Listen for tab updates to keep harpoon state in sync
  */
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, _tab) => {
   // Only care about URL changes (navigation)
   if (changeInfo.url) {
     // Sync might be needed if URLs changed
@@ -346,7 +355,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
  * Note: We don't automatically remove from harpoon when tab is closed
  * because the URL is saved for reopening
  */
-chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
+chrome.tabs.onRemoved.addListener(async (_tabId, _removeInfo) => {
   // Tab removed - harpoon keeps the URL for reopening
 });
 
@@ -364,4 +373,4 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 });
 
 // Log that the service worker is running
-console.log('HyperTabs: Background service worker started');
+log.info('Background service worker started');
