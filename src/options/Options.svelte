@@ -165,50 +165,50 @@
           
           <div class="shortcut-grid">
             <div class="shortcut-item">
-              <label>Open HyperTabs</label>
-              <input type="text" readonly value="Ctrl+Shift+K" placeholder="Ctrl+Shift+K" class="shortcut-input has-default" />
+              <label for="shortcut-open">Open HyperTabs</label>
+              <input id="shortcut-open" type="text" readonly value="Ctrl+Shift+K" placeholder="Ctrl+Shift+K" class="shortcut-input has-default" />
               <span class="shortcut-status default">default</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Harpoon slot 1</label>
-              <input type="text" readonly value="Alt+1" placeholder="Alt+1" class="shortcut-input has-default" />
+              <label for="shortcut-harpoon1">Harpoon slot 1</label>
+              <input id="shortcut-harpoon1" type="text" readonly value="Alt+1" placeholder="Alt+1" class="shortcut-input has-default" />
               <span class="shortcut-status default">default</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Harpoon slot 2</label>
-              <input type="text" readonly value="Alt+2" placeholder="Alt+2" class="shortcut-input has-default" />
+              <label for="shortcut-harpoon2">Harpoon slot 2</label>
+              <input id="shortcut-harpoon2" type="text" readonly value="Alt+2" placeholder="Alt+2" class="shortcut-input has-default" />
               <span class="shortcut-status default">default</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Harpoon slot 3</label>
-              <input type="text" readonly placeholder="Alt+3" class="shortcut-input" />
+              <label for="shortcut-harpoon3">Harpoon slot 3</label>
+              <input id="shortcut-harpoon3" type="text" readonly placeholder="Alt+3" class="shortcut-input" />
               <span class="shortcut-status">not set</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Harpoon slot 4</label>
-              <input type="text" readonly placeholder="Alt+4" class="shortcut-input" />
+              <label for="shortcut-harpoon4">Harpoon slot 4</label>
+              <input id="shortcut-harpoon4" type="text" readonly placeholder="Alt+4" class="shortcut-input" />
               <span class="shortcut-status">not set</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Mark to Harpoon</label>
-              <input type="text" readonly placeholder="Ctrl+Shift+M" class="shortcut-input" />
+              <label for="shortcut-mark">Mark to Harpoon</label>
+              <input id="shortcut-mark" type="text" readonly placeholder="Ctrl+Shift+M" class="shortcut-input" />
               <span class="shortcut-status">not set</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Next workspace</label>
-              <input type="text" readonly placeholder="Ctrl+Shift+]" class="shortcut-input" />
+              <label for="shortcut-ws-next">Next workspace</label>
+              <input id="shortcut-ws-next" type="text" readonly placeholder="Ctrl+Shift+]" class="shortcut-input" />
               <span class="shortcut-status">not set</span>
             </div>
             
             <div class="shortcut-item">
-              <label>Prev workspace</label>
-              <input type="text" readonly placeholder="Ctrl+Shift+[" class="shortcut-input" />
+              <label for="shortcut-ws-prev">Prev workspace</label>
+              <input id="shortcut-ws-prev" type="text" readonly placeholder="Ctrl+Shift+[" class="shortcut-input" />
               <span class="shortcut-status">not set</span>
             </div>
           </div>
@@ -464,27 +464,6 @@
     color: #888;
   }
 
-  .info-text code {
-    background-color: #16162a;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: monospace;
-  }
-
-  .link-btn {
-    background: none;
-    border: none;
-    color: #6366f1;
-    cursor: pointer;
-    font-size: inherit;
-    padding: 0;
-    text-decoration: none;
-  }
-
-  .link-btn:hover {
-    text-decoration: underline;
-  }
-
   /* Keybind info section */
   .keybind-info {
     margin-top: 16px;
@@ -536,17 +515,6 @@
     font-family: monospace;
     font-size: 12px;
     color: #eee;
-  }
-
-  .default-badge {
-    font-size: 9px;
-    background-color: #22c55e;
-    color: #000;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-left: 6px;
-    text-transform: uppercase;
-    font-weight: 600;
   }
 
   /* Shortcut config section */

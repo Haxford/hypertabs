@@ -189,15 +189,14 @@ chrome.commands.onCommand.addListener(async (command) => {
   log.debug('Command received:', command);
   
   switch (command) {
-    case 'harpoon-mark':
-      // Mark current tab to next available slot
-      // For now, we'll show a simple prompt by opening popup
-      // In the future, this could show an overlay to select slot
-      const slot = await markToSlot(1); // Default to slot 1
-      if (slot) {
+    case 'harpoon-mark': {
+      // Mark current tab to the next available harpoon slot
+      const slotNum = await markToNextAvailable();
+      if (slotNum !== null) {
         await updateContextMenus();
       }
       break;
+    }
       
     case 'harpoon-1':
       await jumpToSlot(1);
