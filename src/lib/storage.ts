@@ -69,6 +69,17 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 // =============================================================================
+// CONCURRENCY CONTROL
+// =============================================================================
+
+/**
+ * Per-key lock map for serializing update() calls.
+ * Each entry holds a Promise that resolves when the current update for that key
+ * completes, so subsequent updates on the same key queue behind it.
+ */
+const updateLocks = new Map<StorageKey, Promise<void>>();
+
+// =============================================================================
 // STORAGE OPERATIONS
 // =============================================================================
 
@@ -116,8 +127,9 @@ export async function set<K extends StorageKey>(
 }
 
 /**
- * Updates a stored value using a callback function
- * This is useful for atomic updates where you need the current value
+ * Updates a stored value using a callback function.
+ * Concurrent calls on the same key are serialized using a per-key Promise lock,
+ * so each updater sees the result of the previous update rather than a stale value.
  * 
  * @param key - The storage key to update
  * @param updater - Function that receives current value and returns updated value
@@ -126,10 +138,31 @@ export async function update<K extends StorageKey>(
   key: K,
   updater: (current: StorageSchema[K]) => StorageSchema[K]
 ): Promise<StorageSchema[K]> {
-  const current = await get(key);
-  const updated = updater(current);
-  await set(key, updated);
-  return updated;
+  // Wait for any in-flight update on this key to finish before proceeding
+  const pending = updateLocks.get(key);
+
+  // Promise executor runs synchronously, so releaseLock is assigned before use
+  let releaseLock = () => {};
+  const lock = new Promise<void>((resolve) => {
+    releaseLock = resolve;
+  });
+  updateLocks.set(key, lock);
+
+  try {
+    if (pending) {
+      await pending;
+    }
+    const current = await get(key);
+    const updated = updater(current);
+    await set(key, updated);
+    return updated;
+  } finally {
+    releaseLock();
+    // Clean up the map entry only if it still points to our lock
+    if (updateLocks.get(key) === lock) {
+      updateLocks.delete(key);
+    }
+  }
 }
 
 /**
