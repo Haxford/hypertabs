@@ -105,21 +105,25 @@ export function createLogger(module: string): Logger {
   return {
     debug(...args: unknown[]) {
       if (shouldLog('debug')) {
+        // eslint-disable-next-line no-console
         console.log(prefix, ...args);
       }
     },
     info(...args: unknown[]) {
       if (shouldLog('info')) {
+        // eslint-disable-next-line no-console
         console.log(prefix, ...args);
       }
     },
     warn(...args: unknown[]) {
       if (shouldLog('warn')) {
+        // eslint-disable-next-line no-console
         console.warn(prefix, ...args);
       }
     },
     error(...args: unknown[]) {
       if (shouldLog('error')) {
+        // eslint-disable-next-line no-console
         console.error(prefix, ...args);
       }
     },

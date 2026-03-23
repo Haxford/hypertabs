@@ -249,7 +249,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 async function handleMessage(
   message: { type: string; payload?: unknown },
-  sender: chrome.runtime.MessageSender
+  _sender: chrome.runtime.MessageSender
 ): Promise<unknown> {
   log.debug('Received message:', message.type);
   
@@ -341,7 +341,7 @@ async function handleMessage(
 /**
  * Listen for tab updates to keep harpoon state in sync
  */
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, _tab) => {
   // Only care about URL changes (navigation)
   if (changeInfo.url) {
     // Sync might be needed if URLs changed
@@ -355,7 +355,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
  * Note: We don't automatically remove from harpoon when tab is closed
  * because the URL is saved for reopening
  */
-chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
+chrome.tabs.onRemoved.addListener(async (_tabId, _removeInfo) => {
   // Tab removed - harpoon keeps the URL for reopening
 });
 

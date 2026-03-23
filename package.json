@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "lint": "eslint src/",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -26,12 +27,16 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.25",
+    "@eslint/js": "^10.0.1",
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@tsconfig/svelte": "^5.0.4",
     "@types/chrome": "^0.1.32",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
     "svelte": "^4.2.19",
     "svelte-check": "^4.0.5",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.57.2",
     "vite": "^5.4.11",
     "vitest": "^4.1.1"
   },
