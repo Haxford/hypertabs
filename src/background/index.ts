@@ -27,6 +27,9 @@ import {
 } from '../lib/workspaces';
 import { switchToTab, createTab } from '../lib/tabs';
 import type { SearchResult } from '../lib/types';
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('Background');
 
 // =============================================================================
 // INITIALIZATION
@@ -36,7 +39,7 @@ import type { SearchResult } from '../lib/types';
  * Initialize the extension when installed or updated
  */
 chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log('HyperTabs: Extension installed/updated', details.reason);
+  log.info('Extension installed/updated', details.reason);
   
   // Create context menus
   await createContextMenus();
@@ -50,7 +53,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
  * Initialize on browser startup
  */
 chrome.runtime.onStartup.addListener(async () => {
-  console.log('HyperTabs: Browser started');
+  log.info('Browser started');
   
   // Sync state with current tabs
   await syncHarpoonWithTabs();
@@ -176,7 +179,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
  * Handle keyboard commands defined in manifest.json
  */
 chrome.commands.onCommand.addListener(async (command) => {
-  console.log('HyperTabs: Command received:', command);
+  log.debug('Command received:', command);
   
   switch (command) {
     case 'harpoon-mark':
@@ -227,7 +230,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
     .then(sendResponse)
     .catch((error) => {
-      console.error('HyperTabs: Message handling error:', error);
+      log.error('Message handling error:', error);
       sendResponse({ error: error.message });
     });
   
@@ -242,7 +245,7 @@ async function handleMessage(
   message: { type: string; payload?: unknown },
   sender: chrome.runtime.MessageSender
 ): Promise<unknown> {
-  console.log('HyperTabs: Received message:', message.type);
+  log.debug('Received message:', message.type);
   
   switch (message.type) {
     // =========================================================================
@@ -320,7 +323,7 @@ async function handleMessage(
     // =========================================================================
     
     default:
-      console.warn('HyperTabs: Unknown message type:', message.type);
+      log.warn('Unknown message type:', message.type);
       return null;
   }
 }
@@ -364,4 +367,4 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
 });
 
 // Log that the service worker is running
-console.log('HyperTabs: Background service worker started');
+log.info('Background service worker started');

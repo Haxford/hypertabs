@@ -14,6 +14,9 @@
 import type { Workspace, WorkspaceState } from './types';
 import { get, update } from './storage';
 import { getAllTabs, groupTabs, setGroupCollapsed, ungroupTabs } from './tabs';
+import { createLogger } from './logger';
+
+const log = createLogger('Workspaces');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -62,7 +65,7 @@ export async function createWorkspace(
     workspaces: [...state.workspaces, workspace],
   }));
 
-  console.log(`Workspaces: Created workspace "${name}"`);
+  log.info(`Created workspace "${name}"`);
   return workspace;
 }
 
@@ -83,7 +86,7 @@ export async function renameWorkspace(
     ),
   }));
 
-  console.log(`Workspaces: Renamed workspace to "${newName}"`);
+  log.info(`Renamed workspace to "${newName}"`);
 }
 
 /**
@@ -104,7 +107,7 @@ export async function deleteWorkspace(workspaceId: string): Promise<void> {
 
     // Don't allow deleting the default workspace
     if (workspaceToDelete.isDefault) {
-      console.warn('Workspaces: Cannot delete the default workspace');
+      log.warn('Cannot delete the default workspace');
       return state;
     }
 
@@ -128,7 +131,7 @@ export async function deleteWorkspace(workspaceId: string): Promise<void> {
     };
   });
 
-  console.log(`Workspaces: Deleted workspace ${workspaceId}`);
+  log.info(`Deleted workspace ${workspaceId}`);
 }
 
 /**
@@ -164,7 +167,7 @@ export async function assignTabToWorkspace(
     const tab = await chrome.tabs.get(tabId);
     tabUrl = tab.url || '';
   } catch {
-    console.warn(`Workspaces: Tab ${tabId} no longer exists`);
+    log.warn(`Tab ${tabId} no longer exists`);
     return;
   }
 
@@ -202,7 +205,7 @@ export async function assignTabToWorkspace(
     };
   });
 
-  console.log(`Workspaces: Assigned tab ${tabId} to workspace ${workspaceId}`);
+  log.info(`Assigned tab ${tabId} to workspace ${workspaceId}`);
 }
 
 /**
@@ -234,7 +237,7 @@ export async function removeTabFromWorkspace(tabId: number): Promise<void> {
     };
   });
 
-  console.log(`Workspaces: Removed tab ${tabId} from workspace`);
+  log.info(`Removed tab ${tabId} from workspace`);
 }
 
 // =============================================================================
@@ -261,18 +264,18 @@ export async function switchWorkspace(workspaceId: string | null): Promise<void>
       try {
         await ungroupTabs(tabIdsToUngroup);
       } catch (error) {
-        console.warn('Workspaces: Error ungrouping tabs:', error);
+        log.warn('Error ungrouping tabs:', error);
       }
     }
 
     await update('workspaces', (s) => ({ ...s, activeWorkspaceId: null }));
-    console.log('Workspaces: Switched to all tabs view');
+    log.info('Switched to all tabs view');
     return;
   }
 
   const targetWorkspace = state.workspaces.find((ws) => ws.id === workspaceId);
   if (!targetWorkspace) {
-    console.warn(`Workspaces: Workspace ${workspaceId} not found`);
+    log.warn(`Workspace ${workspaceId} not found`);
     return;
   }
 
@@ -309,13 +312,13 @@ export async function switchWorkspace(workspaceId: string | null): Promise<void>
         }
       }
     } catch (error) {
-      console.warn(`Workspaces: Error managing group for ${workspace.name}:`, error);
+      log.warn(`Error managing group for ${workspace.name}:`, error);
     }
   }
 
   // Update active workspace
   await update('workspaces', (s) => ({ ...s, activeWorkspaceId: workspaceId }));
-  console.log(`Workspaces: Switched to workspace "${targetWorkspace.name}"`);
+  log.info(`Switched to workspace "${targetWorkspace.name}"`);
 }
 
 /**
@@ -378,7 +381,7 @@ export async function saveWindowAsWorkspace(name: string): Promise<Workspace> {
     }
   }
 
-  console.log(`Workspaces: Saved window as workspace "${name}" with ${tabs.length} tabs`);
+  log.info(`Saved window as workspace "${name}" with ${tabs.length} tabs`);
   return workspace;
 }
 
@@ -394,12 +397,12 @@ export async function restoreWorkspace(
 ): Promise<void> {
   const workspace = await getWorkspace(workspaceId);
   if (!workspace) {
-    console.warn(`Workspaces: Workspace ${workspaceId} not found`);
+    log.warn(`Workspace ${workspaceId} not found`);
     return;
   }
 
   if (workspace.tabUrls.length === 0) {
-    console.log(`Workspaces: Workspace "${workspace.name}" has no saved URLs`);
+    log.info(`Workspace "${workspace.name}" has no saved URLs`);
     return;
   }
 
@@ -416,7 +419,7 @@ export async function restoreWorkspace(
     }
   }
 
-  console.log(`Workspaces: Restored workspace "${workspace.name}" with ${workspace.tabUrls.length} tabs`);
+  log.info(`Restored workspace "${workspace.name}" with ${workspace.tabUrls.length} tabs`);
 }
 
 // =============================================================================
@@ -454,5 +457,5 @@ export async function syncWithTabs(): Promise<void> {
     };
   });
 
-  console.log('Workspaces: Synced with current tabs');
+  log.info('Synced with current tabs');
 }

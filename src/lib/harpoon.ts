@@ -21,6 +21,9 @@ import {
   switchToTab,
   createTab,
 } from './tabs';
+import { createLogger } from './logger';
+
+const log = createLogger('Harpoon');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -76,13 +79,13 @@ export async function markToSlot(
   
   // Validate tab
   if (!tab || !tab.id || !tab.url) {
-    console.error('Harpoon: Cannot mark invalid tab');
+    log.error('Cannot mark invalid tab');
     return null;
   }
   
   // Don't allow marking chrome:// or extension pages
   if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-    console.error('Harpoon: Cannot mark browser internal pages');
+    log.error('Cannot mark browser internal pages');
     return null;
   }
   
@@ -112,7 +115,7 @@ export async function markToSlot(
     };
   });
   
-  console.log(`Harpoon: Marked tab "${slot.title}" to slot ${slotId}`);
+  log.info(`Marked tab "${slot.title}" to slot ${slotId}`);
   return slot;
 }
 
@@ -132,7 +135,7 @@ export async function markToNextAvailable(): Promise<number | null> {
     }
   }
   
-  console.log('Harpoon: All slots are full');
+  log.info('All slots are full');
   return null;
 }
 
@@ -158,7 +161,7 @@ export async function removeFromSlot(slotId: number): Promise<void> {
     };
   });
   
-  console.log(`Harpoon: Removed tab from slot ${slotId}`);
+  log.info(`Removed tab from slot ${slotId}`);
 }
 
 /**
@@ -191,7 +194,7 @@ export async function clearAll(): Promise<void> {
     slots: Array(state.maxSlots).fill(null),
   }));
   
-  console.log('Harpoon: Cleared all slots');
+  log.info('Cleared all slots');
 }
 
 // =============================================================================
@@ -210,7 +213,7 @@ export async function jumpToSlot(slotId: number): Promise<boolean> {
   const slot = state.slots[slotId - 1]; // Convert to 0-indexed
   
   if (!slot) {
-    console.log(`Harpoon: Slot ${slotId} is empty`);
+    log.debug(`Slot ${slotId} is empty`);
     return false;
   }
   
@@ -220,7 +223,7 @@ export async function jumpToSlot(slotId: number): Promise<boolean> {
     if (tab) {
       // Tab still exists, switch to it
       await switchToTab(tab.id!, tab.windowId);
-      console.log(`Harpoon: Jumped to slot ${slotId} (tab ID ${slot.tabId})`);
+      log.info(`Jumped to slot ${slotId} (tab ID ${slot.tabId})`);
       return true;
     }
   }
@@ -243,7 +246,7 @@ export async function jumpToSlot(slotId: number): Promise<boolean> {
     });
     
     await switchToTab(tabByUrl.id, tabByUrl.windowId);
-    console.log(`Harpoon: Jumped to slot ${slotId} (found by URL)`);
+    log.info(`Jumped to slot ${slotId} (found by URL)`);
     return true;
   }
   
@@ -269,11 +272,11 @@ export async function jumpToSlot(slotId: number): Promise<boolean> {
       });
     }
     
-    console.log(`Harpoon: Reopened tab for slot ${slotId}`);
+    log.info(`Reopened tab for slot ${slotId}`);
     return true;
   }
   
-  console.log(`Harpoon: Tab for slot ${slotId} was closed and reopen is disabled`);
+  log.debug(`Tab for slot ${slotId} was closed and reopen is disabled`);
   return false;
 }
 
@@ -309,7 +312,7 @@ export async function swapSlots(slotA: number, slotB: number): Promise<void> {
     return { ...state, slots: newSlots };
   });
   
-  console.log(`Harpoon: Swapped slots ${slotA} and ${slotB}`);
+  log.info(`Swapped slots ${slotA} and ${slotB}`);
 }
 
 /**
@@ -344,7 +347,7 @@ export async function moveSlot(fromSlot: number, toSlot: number): Promise<void> 
     return { ...state, slots: updatedSlots };
   });
   
-  console.log(`Harpoon: Moved slot ${fromSlot} to ${toSlot}`);
+  log.info(`Moved slot ${fromSlot} to ${toSlot}`);
 }
 
 // =============================================================================
@@ -403,6 +406,6 @@ export async function syncWithTabs(): Promise<void> {
   
   if (needsUpdate) {
     await update('harpoon', (state) => ({ ...state, slots: newSlots }));
-    console.log('Harpoon: Synced tab IDs with current tabs');
+    log.info('Synced tab IDs with current tabs');
   }
 }
