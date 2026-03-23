@@ -26,7 +26,14 @@ import {
   syncWithTabs as syncWorkspacesWithTabs,
 } from '../lib/workspaces';
 import { switchToTab, createTab } from '../lib/tabs';
-import type { SearchResult } from '../lib/types';
+import {
+  validateHarpoonMarkPayload,
+  validateHarpoonSlotPayload,
+  validateSearchResultPayload,
+  validateWorkspaceSwitchPayload,
+  validateWorkspaceCreatePayload,
+  validateWorkspaceDeletePayload,
+} from '../lib/validators';
 import { createLogger } from '../lib/logger';
 
 const log = createLogger('Background');
@@ -256,19 +263,19 @@ async function handleMessage(
       return await getHarpoonState();
     
     case 'HARPOON_MARK': {
-      const { slotId, tabId } = message.payload as { slotId: number; tabId?: number };
+      const { slotId, tabId } = validateHarpoonMarkPayload(message.payload);
       const slot = await markToSlot(slotId, tabId);
       await updateContextMenus();
       return slot;
     }
     
     case 'HARPOON_JUMP': {
-      const { slotId } = message.payload as { slotId: number };
+      const { slotId } = validateHarpoonSlotPayload(message.payload, 'HARPOON_JUMP');
       return await jumpToSlot(slotId);
     }
     
     case 'HARPOON_REMOVE': {
-      const { slotId } = message.payload as { slotId: number };
+      const { slotId } = validateHarpoonSlotPayload(message.payload, 'HARPOON_REMOVE');
       await removeFromSlot(slotId);
       await updateContextMenus();
       return true;
@@ -279,7 +286,7 @@ async function handleMessage(
     // =========================================================================
     
     case 'SELECT_RESULT': {
-      const result = message.payload as SearchResult;
+      const result = validateSearchResultPayload(message.payload);
       
       switch (result.type) {
         case 'tab':
@@ -302,18 +309,18 @@ async function handleMessage(
     // =========================================================================
     
     case 'WORKSPACE_SWITCH': {
-      const { workspaceId } = message.payload as { workspaceId: string | null };
+      const { workspaceId } = validateWorkspaceSwitchPayload(message.payload);
       await switchWorkspace(workspaceId);
       return true;
     }
     
     case 'WORKSPACE_CREATE': {
-      const { name } = message.payload as { name: string };
+      const { name } = validateWorkspaceCreatePayload(message.payload);
       return await createWorkspace(name);
     }
     
     case 'WORKSPACE_DELETE': {
-      const { workspaceId } = message.payload as { workspaceId: string };
+      const { workspaceId } = validateWorkspaceDeletePayload(message.payload);
       await deleteWorkspace(workspaceId);
       return true;
     }
